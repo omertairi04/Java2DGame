@@ -14,16 +14,27 @@ public class Player extends Entity {
     GamePanel gP;
     KeyHandler keyH;
 
+    public final int screenX;
+    public final int screenY;
+
+    int hasKey = 0;
+
+
     public Player(GamePanel gP, KeyHandler keyH) {
         this.gP = gP;
         this.keyH = keyH;
+        screenX = gP.screenWidth / 2 - (gP.tileSize / 2);
+        screenY = gP.screenHeight / 2 - (gP.tileSize / 2);
+        solidArea = new Rectangle(8, 16, 32, 32);
+        solidAreaDefaultX = solidArea.x;
+        solidAreaDefaultY = solidArea.y;
         setDefaultValues();
         getPlayerImage();
     }
 
     public void setDefaultValues() {
-        x = 100;
-        y = 100;
+        worldX = gP.tileSize * 23;
+        worldY = gP.tileSize * 21; // starting position
         speed = 4;
         direction = "down";
     }
@@ -48,18 +59,37 @@ public class Player extends Entity {
         if (keyH.upPressed || keyH.downPressed || keyH.leftPressed || keyH.rightPressed) {
             if (keyH.upPressed) {
                 direction = "up";
-                y -= speed;
             } else if (keyH.downPressed) {
                 direction = "down";
-                y += speed;
             } else if (keyH.leftPressed) {
                 direction = "left";
-                x -= speed;
             } else if (keyH.rightPressed) {
                 direction = "right";
-                x += speed;
             }
 
+            // check collision
+            collisionOn = false;
+            gP.cChecker.checkTile(this);
+            // check obj collision
+            int objIndex = gP.cChecker.checkObject(this, true);
+            pickUpObject(objIndex);
+
+            if (!collisionOn) {
+                switch (direction) {
+                    case "up":
+                        worldY -= speed;
+                        break;
+                    case "down":
+                        worldY += speed;
+                        break;
+                    case "left":
+                        worldX -= speed;
+                        break;
+                    case "right":
+                        worldX += speed;
+                        break;
+                }
+            }
             spriteCounter++;
             if (spriteCounter > 12) {
                 if (spriteNum == 1) {
@@ -108,7 +138,27 @@ public class Player extends Entity {
                 }
                 break;
         }
-        g2.drawImage(image, x, y, gP.tileSize, gP.tileSize, null);
+        g2.drawImage(image, screenX, screenY, gP.tileSize, gP.tileSize, null);
+    }
+
+    public void pickUpObject(int index) {
+        if (index != 999) {
+            String objectName = gP.obj[index].name;
+            switch (objectName) {
+                case "Key":
+                    hasKey++;
+                    gP.obj[index] = null;
+                    System.out.println("KEY " + hasKey);
+                    break;
+                case "Door":
+                    if (hasKey > 0) {
+                        gP.obj[index] = null;
+                        hasKey--;
+                    }
+                    System.out.println("KEY " + hasKey);
+                    break;
+            }
+        }
     }
 
 }
