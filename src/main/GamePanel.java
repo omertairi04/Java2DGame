@@ -21,18 +21,25 @@ public class GamePanel extends JPanel implements Runnable {
     // WORLD SETTINGS
     public final int maxWorldCol = 50;
     public final int maxWorldRow = 50;
-    public final int worldWidth = tileSize * maxWorldCol;
-    public final int worldHeight = tileSize * maxWorldRow;
 
     int FPS = 60;
 
     public TileManager tileM = new TileManager(this);
-    KeyHandler keyH = new KeyHandler();
+    KeyHandler keyH = new KeyHandler(this);
+    Sound music = new Sound();
+    Sound se = new Sound();
     Thread gameThread;
+    // ENTITY AND OBJECT
     public Player player = new Player(this, keyH);
     public CollisionChecker cChecker = new CollisionChecker(this);
     public SuperObject obj[] = new SuperObject[10];
     public AssetSetter aSetter = new AssetSetter(this);
+    public UI ui = new UI(this);
+
+    // GAME STATE
+    public int gameState;
+    public final int playState = 1;
+    public final int pauseState = 2;
 
     public GamePanel() {
         this.setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -44,6 +51,8 @@ public class GamePanel extends JPanel implements Runnable {
 
     public void setUpGame() {
         aSetter.setObject();
+        playMusic(0);
+        gameState = playState;
     }
 
     public void startGameThread() {
@@ -82,9 +91,12 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     public void update() {
-
-        player.update();
-
+        if (gameState == playState) {
+            player.update();
+        }
+        if (gameState == pauseState) {
+            // TODO
+        }
     }
 
     public void paintComponent(Graphics g) {
@@ -92,6 +104,13 @@ public class GamePanel extends JPanel implements Runnable {
         super.paintComponent(g); // always
 
         Graphics2D g2 = (Graphics2D) g;
+        // DEBUG
+        long drawStart = 0;
+        if (keyH.checkDrawTime) {
+            drawStart = System.nanoTime();
+
+        }
+
         // tile
         tileM.draw(g2);
 
@@ -105,8 +124,34 @@ public class GamePanel extends JPanel implements Runnable {
         // player
         player.draw(g2);
 
+        // UI
+        ui.draw(g2);
+        // DEBUG
+        if (keyH.checkDrawTime) {
+            long drawEnd = System.nanoTime();
+            long passed = drawEnd - drawStart;
+            g2.setColor(Color.RED);
+            g2.drawString("Draw Time: " + passed, 10, 400);
+            System.out.println("Draw Time: " + passed);
+        }
+
         g2.dispose();
 
+    }
+
+    public void playMusic(int i) {
+        music.setFile(i);
+        music.play();
+        music.loop();
+    }
+
+    public void stopMusic() {
+        music.stop();
+    }
+
+    public void playSE(int i) {
+        se.setFile(i);
+        se.play();
     }
 
 }

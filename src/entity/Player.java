@@ -2,6 +2,7 @@ package entity;
 
 import main.GamePanel;
 import main.KeyHandler;
+import main.UtilityTool;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -17,8 +18,7 @@ public class Player extends Entity {
     public final int screenX;
     public final int screenY;
 
-    int hasKey = 0;
-
+    int standCounter = 0;
 
     public Player(GamePanel gP, KeyHandler keyH) {
         this.gP = gP;
@@ -40,19 +40,27 @@ public class Player extends Entity {
     }
 
     public void getPlayerImage() {
-        try {
-            up1 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_up_1.png")));
-            up2 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_up_2.png")));
-            down1 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_down_1.png")));
-            down2 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_down_2.png")));
-            left1 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_left_1.png")));
-            left2 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_left_2.png")));
-            right1 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_right_1.png")));
-            right2 = ImageIO.read(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("player/boy_right_2.png")));
+        up1 = setup("boy_up_1");
+        up2 = setup("boy_up_2");
+        down1 = setup("boy_down_1");
+        down2 = setup("boy_down_2");
+        left1 = setup("boy_left_1");
+        left2 = setup("boy_left_2");
+        right1 = setup("boy_right_1");
+        right2 = setup("boy_right_2");
+    }
 
+    public BufferedImage setup(String imageName) {
+        UtilityTool ut = new UtilityTool();
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(Objects.requireNonNull(
+                    getClass().getClassLoader().getResourceAsStream("player/" + imageName + ".png")));
+            image = ut.scaleImage(image, gP.tileSize, gP.tileSize);
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return image;
     }
 
     public void update() {
@@ -97,6 +105,12 @@ public class Player extends Entity {
                 } else if (spriteNum == 2) spriteNum = 1;
                 spriteCounter = 0;
             }
+        } else {
+            standCounter++;
+            if (standCounter == 20) {
+                spriteNum = 1;
+                standCounter = 0;
+            }
         }
     }
 
@@ -139,25 +153,14 @@ public class Player extends Entity {
                 break;
         }
         g2.drawImage(image, screenX, screenY, gP.tileSize, gP.tileSize, null);
+        // DISPLAY COLLISION BOX
+        // g2.setColor(Color.RED);
+        // g2.drawRect(screenX + solidArea.x, screenY + solidArea.y, solidArea.width, solidArea.height);
     }
 
     public void pickUpObject(int index) {
         if (index != 999) {
-            String objectName = gP.obj[index].name;
-            switch (objectName) {
-                case "Key":
-                    hasKey++;
-                    gP.obj[index] = null;
-                    System.out.println("KEY " + hasKey);
-                    break;
-                case "Door":
-                    if (hasKey > 0) {
-                        gP.obj[index] = null;
-                        hasKey--;
-                    }
-                    System.out.println("KEY " + hasKey);
-                    break;
-            }
+
         }
     }
 
